@@ -1,0 +1,122 @@
+% server.pl - Main server file
+:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+:- use_module(library(http/http_json)).
+:- use_module(library(http/http_cors)).
+
+% Load knowledge base
+:- [knowledge_base/symptoms].
+:- [knowledge_base/rules].
+:- [knowledge_base/advice].
+
+% Server setup
+server(Port) :-
+    http_server(http_dispatch, [port(Port)]).
+
+% API endpoints
+:- http_handler('/api/analyze', analyze_message, [method(post)]).
+:- http_handler('/api/assess', assess_form, [method(post)]).
+:- http_handler('/api/recommendations', get_recommendations, [method(get)]).
+
+% symptoms.pl - Stress symptoms and indicators
+:- dynamic has_symptom/1.
+:- dynamic symptom_severity/2.
+
+% Base symptoms
+symptom(sleep_issues).
+symptom(anxiety).
+symptom(concentration).
+symptom(fatigue).
+symptom(irritability).
+
+% Severity levels
+severity_level(none, 0).
+severity_level(mild, 1).
+severity_level(moderate, 2).
+severity_level(severe, 3).
+
+% Record symptom with severity
+record_symptom(Symptom, Severity) :-
+    retractall(has_symptom(Symptom)),
+    assertz(has_symptom(Symptom)),
+    retractall(symptom_severity(Symptom, _)),
+    assertz(symptom_severity(Symptom, Severity)).
+
+% rules.pl - Expert system rules
+% Stress level determination
+stress_level(low) :-
+    findall(Severity, 
+            (has_symptom(Symptom), 
+             symptom_severity(Symptom, Severity)),
+            Severities),
+    sum_list(Severities, Sum),
+    Sum =< 3.
+
+stress_level(moderate) :-
+    findall(Severity, 
+            (has_symptom(Symptom), 
+             symptom_severity(Symptom, Severity)),
+            Severities),
+    sum_list(Severities, Sum),
+    Sum > 3,
+    Sum =< 7.
+
+stress_level(high) :-
+    findall(Severity, 
+            (has_symptom(Symptom), 
+             symptom_severity(Symptom, Severity)),
+            Severities),
+    sum_list(Severities, Sum),
+    Sum > 7.
+
+% advice.pl - Recommendations and next steps
+recommendation(low, [
+    'Practice basic self-care routines',
+    'Maintain regular sleep schedule',
+    'Consider daily meditation'
+]).
+
+recommendation(moderate, [
+    'Begin stress management techniques',
+    'Consider talking to a counselor',
+    'Review work-life balance',
+    'Start regular exercise routine'
+]).
+
+recommendation(high, [
+    'Seek professional help',
+    'Immediate stress reduction techniques',
+    'Consider temporary lifestyle changes',
+    'Contact mental health professional'
+]).
+
+% API handlers
+analyze_message(Request) :-
+    http_read_json_dict(Request, Data),
+    process_message(Data.message, Response),
+    reply_json_dict(Response).
+
+assess_form(Request) :-
+    http_read_json_dict(Request, Data),
+    process_assessment(Data, Response),
+    reply_json_dict(Response).
+
+% Message processing
+process_message(Message, Response) :-
+    analyze_text(Message, Symptoms),
+    evaluate_stress(Symptoms, Level),
+    get_recommendations(Level, Recommendations),
+    Response = _{
+        stress_level: Level,
+        recommendations: Recommendations
+    }.
+
+% Form processing
+process_assessment(Data, Response) :-
+    extract_symptoms(Data, Symptoms),
+    evaluate_stress(Symptoms, Level),
+    get_recommendations(Level, Recommendations),
+    Response = _{
+        stress_level: Level,
+        recommendations: Recommendations
+    }.

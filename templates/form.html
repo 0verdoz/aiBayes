@@ -1,29 +1,196 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mood and Stress Input</title>
+    <title>Questoinaire</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #b9936c, #8c6e4c);
+            color: #4b2e1d;
+            text-align: center;
+        }
+
+        /* Title Styling */
+        h1 {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            font-size: 24px;
+            color: #3e2723;
+        }
+
+        /* Container Styling */
+        .container {
+            background: rgba(255, 248, 240, 0.9);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Question Title */
+        h2 {
+            margin-bottom: 20px;
+            color: #5d4037;
+        }
+
+        /* Input and Select */
+        input,
+        select {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #8d6e63;
+            border-radius: 5px;
+            outline: none;
+            font-size: 16px;
+            background: #f5ebe0;
+            color: #3e2723;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 5px;
+            background: #a98274;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #8c6e4c;
+        }
+
+        /* Animation for Sliding Effect */
+        .question {
+            display: none;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .question.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+    </style>
 </head>
+
 <body>
     <h1>Mood and Stress Expert System</h1>
-    <form method="POST">
-        <label for="mood">Mood:</label>
-        <input type="text" id="mood" name="mood" required><br>
 
-        <label for="sleep">Hours of Sleep:</label>
-        <input type="number" id="sleep" name="sleep" required><br>
 
-        <label for="activity">Minutes of Physical Activity:</label>
-        <input type="number" id="activity" name="activity"><br>
+    <div class="container">
+        <h2 id="question-title">Mood:</h2>
 
-        <label for="major_event">Major Event Today:</label>
-        <select id="major_event" name="major_event">
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-        </select><br>
+        <form id="quiz-form">
+            {% for key, question in questions.items() %}
+            <div class="question active">
+                <label for="mood">{{ question }}</label>
+                <select id="{{key}}" name="q{{ key }}">
+                    <option value="never">Never</option>
+                    <option value="almost never">Almost Never</option>
+                    <option value="fairly often">Fairly Often</option>
+                    <option value="very often">Very Often</option>
+                </select>
+            </div>
+            {% endfor %}
 
-        <button type="submit">Submit</button>
-    </form>
+            <button type="button" id="next-btn">Next</button>
+            <button type="submit" id="submit-btn" style="display: none;">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const questions = document.querySelectorAll('.question');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const questionTitle = document.getElementById('question-title');
+        let currentQuestion = 0;
+
+        const titles = ["Unexpected Upsets",
+            "Lack of Control",
+            "Nervousness and Stress",
+            "Confidence in Problem-Solving",
+            "Things Going Your Way",
+            "Coping with Responsibilities",
+            "Control Over Irritations",
+            "Feeling in Control",
+            "Anger Due to External Events",
+            "Overwhelming Difficulties"];
+
+        function showQuestion(index) {
+            questions.forEach((q, i) => {
+                q.classList.remove('active');
+                if (i === index) {
+                    q.classList.add('active');
+                    questionTitle.textContent = titles[i];
+                }
+            });
+
+            // Show submit button on last question
+            if (index === questions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion(currentQuestion);
+            }
+        });
+
+        document.getElementById('quiz-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Questoinaire submitted successfully!');
+                    console.log(data);
+                    const encodedData = encodeURIComponent(JSON.stringify(data));
+                    window.location.href = `/results?data=${encodedData}`; // Reload for a new session
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        showQuestion(currentQuestion);
+    </script>
 </body>
+
 </html>

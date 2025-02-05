@@ -4,15 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, #b9936c, #8c6e4c);
+            color: #4b2e1d;
+            text-align: center;
+        }
+
+        /* Title Styling */
+        h1 {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            font-size: 24px;
+            color: #3e2723;
+        }
+
+        /* Container Styling */
+        .container {
+            background: rgba(255, 248, 240, 0.9);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* List Styling */
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            font-size: 18px;
+            margin: 10px 0;
+            color: #5d4037;
+        }
+
+        /* Button Styling */
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 20px;
+            border-radius: 5px;
+            background: #a98274;
+            color: white;
+            font-size: 16px;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        a:hover {
+            background: #8c6e4c;
+        }
+    </style>
 </head>
 <body>
     <h1>Mood and Stress Results</h1>
-    <ul>
-        {% for stress, mood in results.items() %}
-            <li>Stress Level: {{ stress }}</li>
-            <li>Mood: {{ mood }}</li>
-        {% endfor %}
-    </ul>
-    <a href="/">Back to Input</a>
+    <div class="container">
+        <ul>
+            {% for stress, mood in results.items() %}
+                <li><strong>Stress Level:</strong> {{ stress }}</li>
+                <li><strong>Mood:</strong> {{ mood }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/">Back to Input</a>
+    </div>
 </body>
 </html>

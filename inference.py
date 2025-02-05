@@ -34,6 +34,24 @@ class MoodStressEngine(KnowledgeEngine):
     def high_stress_anxious(self):
         self.declare(Fact(stress="High", mood_state="Anxious"))
 
+    @Rule(MoodStressFact(mood="happy", major_event=True))
+    def high_stress_anxious(self):
+        self.declare(Fact(stress="Medium", mood_state="Excited"))
+
+    @Rule(MoodStressFact(mood="sad", major_event=True))
+    def high_stress_anxious(self):
+        self.declare(Fact(stress="High", mood_state="sad"))
+
+    @Rule(MoodStressFact(mood="happy", major_event=False))
+    def high_stress_anxious(self):
+        self.declare(Fact(stress="Low", mood_state="False"))
+        
+    @Rule(MoodStressFact(sleep=P(lambda x: x <= 6)))
+    def high_stress_anxious(self):
+        self.declare(Fact(stress="Moderate", mood_state="Tired"))
+
+
+
     # PSS-based rules
     @Rule(
         AS.fact << MoodStressFact(
